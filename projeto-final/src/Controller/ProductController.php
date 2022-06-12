@@ -47,7 +47,32 @@ class ProductController extends AbstractController
 
     public function editAction(): void
     {
-        parent::render('product/edit');
+        $id = $_GET['id'];
+        $con = Connection::getConnection();
+        $query = "SELECT * FROM tb_product WHERE id='{$id}'";
+        $product = $con->prepare($query);
+        $product->execute();
+
+        if ($_POST) {
+            $name = $_POST['name'];
+            $description = $_POST['description'];
+            $value = $_POST['value'];
+            $photo = $_POST['photo'];
+            $quantity = $_POST['quantity'];
+            $categoryId = $_POST['category'];
+
+            $queryUpdate = "UPDATE tb_product SET name='{$name}', description='{$description}', value='{$value}', photo='{$photo}', quantity='{$quantity}', category_id='{$categoryId}' WHERE id='{$id}'";
+
+            $result = $con->prepare($queryUpdate);
+            $result->execute();
+
+            parent::renderMessage('Pronto, produto atualizado');
+        }
+
+
+        parent::render('product/edit', [
+            'product' => $product->fetch(\PDO::FETCH_ASSOC),
+        ]);
     }
 
     public function removeAction(): void
@@ -58,11 +83,22 @@ class ProductController extends AbstractController
         $result = $con->prepare($query);
         $result->execute();
 
-        $message =  'pronto produto excluído';
+        parent::renderMessage('pronto produto excluído');
 
-        include dirname(__DIR__).'/View/_partials/message.php';
+//        include dirname(__DIR__).'/View/_partials/message.php';
 
     }
 
+    public function listCategories(): array
+    {
+        $con = Connection::getConnection();
+        $category = $con->prepare('SELECT * FROM tb_category');
+        $category->execute();
+        $categorias = array();
+        while($r = \PDO::FETCH_ASSOC($category)) {
+            $categorias[] = $r["category"];
+        }
+        return $categorias;
+    }
 
 }
